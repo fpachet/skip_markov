@@ -1,4 +1,4 @@
-# Experiment with skip markov models
+# Experiment with skip Markov models
 
 Skip Markov models learn probabilities of events conditioned by events in the past located at some distance k.
 The goal of this project is to study how to use them to make powerful predictions, especially compared to variable-order Markov models and max entropy models (Cf www.github.com/fpachet/max_entropy_music)
