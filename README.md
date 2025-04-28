@@ -8,7 +8,7 @@ The goal of this project is to study how to use them to make powerful prediction
 
 - a mixture of order-1 Markov skip model with parameter estimation using MLE
 - the same, but adding predictions from future events (forward skips)
-- 
+
 ## Authors
 - [François Pachet](https://github.com/fpachet)
 
