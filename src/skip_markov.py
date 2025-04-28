@@ -238,7 +238,7 @@ def extract_notes(path) -> list[int]:
             notes.append(msg.note)
     return notes
 
-def save_midi(sequence, output_file="../data/skip_markov_generated.mid"):
+def save_midi(sequence, output_file="../skip_markov_generated.mid"):
     mid = mido.MidiFile()
     track = mido.MidiTrack()
     mid.tracks.append(track)
@@ -249,7 +249,7 @@ def save_midi(sequence, output_file="../data/skip_markov_generated.mid"):
 
 def main_example():
     # path = "../../data/bach_partita_mono.midi"
-    path = "../data/prelude_c.mid"
+    path = "../data/bach_partita_violin.mid"
     train_seq = extract_notes(path)
 
     # with open('../../data/proust_du_cote.txt', 'r') as file:
