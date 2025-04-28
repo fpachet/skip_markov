@@ -147,6 +147,70 @@ def generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=50)
 
     return generated
 
+def metropolis_resample_sequence(skip_models, skip_distances, alpha, vocab, seq_len=50, num_iters=5000):
+    """Generate a new sequence using Metropolis resampling."""
+    generated = random.choices(vocab, k=seq_len)
+    D = len(alpha)
+
+    for _ in range(num_iters):
+        t = random.randint(1, seq_len - 2)  # avoid boundaries
+
+        mixture_dist = defaultdict(float)
+
+        for j, d in enumerate(skip_distances):
+            context_idx = t - d
+            if 0 <= context_idx < seq_len:
+                context_note = generated[context_idx]
+                if context_note in skip_models[d]:
+                    local_dist = skip_models[d][context_note]
+                    for candidate_next, p_local in local_dist.items():
+                        mixture_dist[candidate_next] += alpha[j] * p_local
+
+        if not mixture_dist:
+            continue
+
+        total_prob = sum(mixture_dist.values())
+        for k in mixture_dist:
+            mixture_dist[k] /= total_prob
+
+        notes_list = list(mixture_dist.keys())
+        probs_list = np.array([mixture_dist[n] for n in notes_list])
+        cumsum_probs = np.cumsum(probs_list)
+        r = random.random()
+        idx_sample = np.searchsorted(cumsum_probs, r)
+        chosen_note = notes_list[idx_sample]
+
+        generated[t] = chosen_note
+
+    return generated
+
+def smooth_sequence(sequence, skip_models, skip_distances, alpha):
+    """Generate a new sequence using Metropolis resampling."""
+    seq_len = len(sequence)
+    for t in range(len(sequence)):
+        mixture_dist = defaultdict(float)
+        for j, d in enumerate(skip_distances):
+            context_idx = t - d
+            if 0 <= context_idx < seq_len:
+                context_note = sequence[context_idx]
+                if context_note in skip_models[d]:
+                    local_dist = skip_models[d][context_note]
+                    for candidate_next, p_local in local_dist.items():
+                        mixture_dist[candidate_next] += alpha[j] * p_local
+
+        if not mixture_dist:
+            continue
+        total_prob = sum(mixture_dist.values())
+        for k in mixture_dist:
+            mixture_dist[k] /= total_prob
+        notes_list = list(mixture_dist.keys())
+        probs_list = np.array([mixture_dist[n] for n in notes_list])
+        np.argmax(probs_list)
+        idx_sample = np.argmax(probs_list)
+        chosen_note = notes_list[idx_sample]
+        sequence[t] = chosen_note
+    return sequence
+
 def main_example():
     path = "../data/bach_partita_violin.mid"
     train_seq = extract_notes(path)
@@ -159,8 +223,11 @@ def main_example():
     alpha = fit_mixture_weights(P, method='BFGS')
     print("Learned mixture weights:", alpha)
 
-    seed_note = train_seq[0]
-    gen_seq = generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=200)
+    # seed_note = train_seq[0]
+    # gen_seq = generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=200)
+    all_notes = sorted(set(train_seq))
+    gen_seq = metropolis_resample_sequence(skip_models, skip_distances, alpha, vocab=all_notes, seq_len=2000, num_iters=10000)
+    gen_seq = smooth_sequence(gen_seq, skip_models, skip_distances, alpha)
     save_midi(gen_seq, output_file="../skip_futures_generated.mid")
 
 if __name__ == "__main__":
