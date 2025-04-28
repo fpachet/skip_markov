@@ -17,5 +17,7 @@ The goal of this project is to study how to use them to make powerful prediction
 The project requires the following Python packages:
 numpy~=2.2.3
 mido~=1.2.10
+scipy==1.15.2
+
 
 
